@@ -1,5 +1,8 @@
 #include <iostream>
 #include <conio.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
@@ -109,22 +112,27 @@ int main()
     program.link();
     program.use();
 
-    Vector3 center{ 0, 0, 0 };
-    vertexArray.bind();
+    auto transform = glm::mat4 { 1.0f };
+    auto tLocation = glGetUniformLocation(program.id(), "transform");
+    auto angle = .0f;
+    vertexArray.bind(); // Needs to be moved to render loop if multiple arrays are to be drawn
 
     while (!glfwWindowShouldClose(window)) {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        pollKey(window, [&](float h) {
-            center.shift(h, 0);
-            vertexArray.shiftArrayBuffer(h, 0);
-        }, [&](float v) {
-            center.shift(0, v);
-            vertexArray.shiftArrayBuffer(0, v);
-        }, [&](float angle) {
-            vertexArray.rotateArrayBuffer(center, angle);
+        pollKey(window,
+        [&](float h) {
+            transform = glm::translate(transform, glm::vec3 { h, .0f, .0f });
+        },
+        [&](float v) {
+            transform = glm::translate(transform, glm::vec3 { .0f, v, .0f });
+        },
+        [&](float a) {
+            transform = glm::rotate(transform, a, glm::vec3( 0, 0, 1.0f));
         });
+
+        glUniformMatrix4fv(tLocation, 1, GL_FALSE, glm::value_ptr(transform));
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -134,7 +142,5 @@ int main()
     program.dispose();
 
     glfwTerminate();
-
-    std::cout << "Press any key to continue..." << std::endl;
-    _getch();
+    return 0;
 }
