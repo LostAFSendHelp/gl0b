@@ -44,8 +44,8 @@ void GL0bArrayBuffer::push(std::vector<Point> points)
 void GL0bArrayBuffer::rotate(const Vector3& center, const float& angle)
 {
 	for (auto i = 0; i < mData.size(); i += 6) {
-		auto x = (mData[i] - center.mX) * cosf(angle) - (mData[i + 1] - center.mY) * sinf(angle);
-		auto y = (mData[i] - center.mX) * sinf(angle) + (mData[i + 1] - center.mY) * cosf(angle);
+		auto x = (mData[i] - center.mX) * cosf(angle) - (mData[i + 1] - center.mY) * sinf(angle) + center.mX;
+		auto y = (mData[i] - center.mX) * sinf(angle) + (mData[i + 1] - center.mY) * cosf(angle) + center.mY;
 
 		mData[i] = x;
 		mData[i + 1] = y;

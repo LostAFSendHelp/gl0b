@@ -117,10 +117,10 @@ int main()
         glfwPollEvents();
 
         pollKey(window, [&](float h) {
-            //center.shift(h, 0);
+            center.shift(h, 0);
             vertexArray.shiftArrayBuffer(h, 0);
         }, [&](float v) {
-            //center.shift(0, v);
+            center.shift(0, v);
             vertexArray.shiftArrayBuffer(0, v);
         }, [&](float angle) {
             vertexArray.rotateArrayBuffer(center, angle);
