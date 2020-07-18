@@ -35,6 +35,10 @@ static void pollKey(GLFWwindow* window,
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
 
+    if (glfwGetKey(window, GLFW_KEY_SPACE)) {
+        rotate(0.0012f);
+    }
+
     if (glfwGetKey(window, GLFW_KEY_LEFT)) {
         horizontal(-0.001f);
     }
@@ -49,10 +53,6 @@ static void pollKey(GLFWwindow* window,
 
     if (glfwGetKey(window, GLFW_KEY_DOWN)) {
         vertical(-0.001f);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-        rotate(0.0012f);
     }
 }
 
@@ -107,14 +107,16 @@ int main()
     // -------------------------------------------
 
     auto program = GL0bProgram();
-    program.addShader(GL_VERTEX_SHADER, "../src/resources/shaders/vertex_shader.glsl");
-    program.addShader(GL_FRAGMENT_SHADER, "../src/resources/shaders/fragment_shader.glsl");
+    program.addShader(GL_VERTEX_SHADER, "src/resources/shaders/vertex_shader.glsl");
+    program.addShader(GL_FRAGMENT_SHADER, "src/resources/shaders/fragment_shader.glsl");
     program.link();
     program.use();
 
-    auto transform = glm::mat4 { 1.0f };
-    auto tLocation = glGetUniformLocation(program.id(), "transform");
-    auto angle = .0f;
+    auto rotation = glm::mat4 { 1.0f };
+    auto translation = glm::mat4 { 1.0f };
+    auto rLocation = glGetUniformLocation(program.id(), "rotation");
+    auto tLocation = glGetUniformLocation(program.id(), "translation");
+
     vertexArray.bind(); // Needs to be moved to render loop if multiple arrays are to be drawn
 
     while (!glfwWindowShouldClose(window)) {
@@ -123,16 +125,17 @@ int main()
 
         pollKey(window,
         [&](float h) {
-            transform = glm::translate(transform, glm::vec3 { h, .0f, .0f });
+            translation = glm::translate(translation, glm::vec3 { h, .0f, .0f });
         },
         [&](float v) {
-            transform = glm::translate(transform, glm::vec3 { .0f, v, .0f });
+            translation = glm::translate(translation, glm::vec3 { .0f, v, .0f });
         },
         [&](float a) {
-            transform = glm::rotate(transform, a, glm::vec3( 0, 0, 1.0f));
+            rotation = glm::rotate(rotation, a, glm::vec3( 0, 0, 1.0f));
         });
 
-        glUniformMatrix4fv(tLocation, 1, GL_FALSE, glm::value_ptr(transform));
+        glUniformMatrix4fv(tLocation, 1, GL_FALSE, glm::value_ptr(translation));
+        glUniformMatrix4fv(rLocation, 1, GL_FALSE, glm::value_ptr(rotation));
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
