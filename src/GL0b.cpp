@@ -114,8 +114,14 @@ int main()
 
     auto rotation = glm::mat4 { 1.0f };
     auto translation = glm::mat4 { 1.0f };
-    auto rLocation = glGetUniformLocation(program.id(), "rotation");
-    auto tLocation = glGetUniformLocation(program.id(), "translation");
+
+    auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-45.0f), glm::vec3(1.0f, .0f, .0f));
+    auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3(.0f, .0f, -3.0f));
+    auto projection = glm::perspective(glm::radians(45.0f), 600.0f/ 600.0f, .1f, 100.0f);
+
+    program.setUniformMat4("model", model);
+    program.setUniformMat4("view", view);
+    program.setUniformMat4("projection", projection);
 
     vertexArray.bind(); // Needs to be moved to render loop if multiple arrays are to be drawn
 
@@ -134,8 +140,8 @@ int main()
             rotation = glm::rotate(rotation, a, glm::vec3( 0, 0, 1.0f));
         });
 
-        glUniformMatrix4fv(tLocation, 1, GL_FALSE, glm::value_ptr(translation));
-        glUniformMatrix4fv(rLocation, 1, GL_FALSE, glm::value_ptr(rotation));
+        // program.setUniformMat4("rotation", rotation);
+        // program.setUniformMat4("translation", translation);
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);

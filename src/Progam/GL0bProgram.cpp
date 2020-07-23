@@ -42,6 +42,21 @@ void GL0bProgram::use()
 	glUseProgram(mID);
 }
 
+void GL0bProgram::setUniformMat4(const char* name, const glm::mat4& matrix) {
+	use();
+	GLint location;
+
+	if (mUniforms.find(name) == mUniforms.end()) {
+		location = glGetUniformLocation(mID, name);
+		if (location >= 0) mUniforms.insert({ name, location });
+		else return;
+	} else {
+		location = mUniforms.at(name);
+	}
+
+	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+}
+
 void GL0bProgram::dispose()
 {
 	glDeleteProgram(mID);
