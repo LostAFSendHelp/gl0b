@@ -117,7 +117,7 @@ int main()
 
     auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-45.0f), glm::vec3(1.0f, .0f, .0f));
     auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3(.0f, .0f, -3.0f));
-    auto projection = glm::perspective(glm::radians(45.0f), 600.0f/ 600.0f, .1f, 100.0f);
+    auto projection = glm::perspective(glm::radians(20.0f), 600.0f/ 600.0f, .1f, 100.0f);
 
     program.setUniformMat4("model", model);
     program.setUniformMat4("view", view);
@@ -131,17 +131,17 @@ int main()
 
         pollKey(window,
         [&](float h) {
-            translation = glm::translate(translation, glm::vec3 { h, .0f, .0f });
+            translation = glm::translate(translation, glm::vec3{ h, .0f, .0f });
         },
         [&](float v) {
-            translation = glm::translate(translation, glm::vec3 { .0f, v, .0f });
+            translation = glm::translate(translation, glm::vec3{ .0f, v, .0f });
         },
         [&](float a) {
-            rotation = glm::rotate(rotation, a, glm::vec3( 0, 0, 1.0f));
+            rotation = glm::rotate(rotation, a, glm::vec3{ 0, 0, 1.0f });
         });
 
-        // program.setUniformMat4("rotation", rotation);
-        // program.setUniformMat4("translation", translation);
+        program.setUniformMat4("rotation", rotation);
+        program.setUniformMat4("translation", translation);
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);

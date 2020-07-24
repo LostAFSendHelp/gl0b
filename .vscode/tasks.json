@@ -12,7 +12,11 @@
             "command": "cmake --build ${workspaceRoot}/build",
             "problemMatcher": [
                 "$msCompile"
-            ]
+            ],
+            "group":{
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }
