@@ -81,20 +81,36 @@ int main()
 
     // TODO: delete dis
     const std::vector<Point> vertices = {
-        { 0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f },     // TR
-        { 0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 0.0f},    // BR
-        {-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f },    // TL
-        {-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f}    // BL
+        {-.5f, .5f, .0f, 0.0f, 0.0f, 1.0f },    // TLF
+        { .5f, .5f, .0f, 1.0f, 0.0f, 0.0f },     // TRF
+        { .5f, -.5f, .0f, 1.0f, 1.0f, 0.0f},    // BRF
+        {-.5f, -.5f, .0f, 0.0f, 1.0f, 0.0f},    // BLF
+        
+        {-.5f, .5f, -1.0f, 0.0f, 0.0f, 1.0f },    // TLB
+        { .5f, .5f, -1.0f, 1.0f, 0.0f, 0.0f },     // TRB
+        { .5f, -.5f, -1.0f, 1.0f, 1.0f, 0.0f},    // BRB
+        {-.5f, -.5f, -1.0f, 0.0f, 1.0f, 0.0f}    // BLB
     };
 
-    std::vector<Point> rotatedVertices{};
-    for (auto vertex : vertices) {
-        rotatedVertices.push_back(vertex.rotateNew({ 0,0,0 }, 1.57f / 2));
-    }
-
     const std::vector<unsigned int> indices = {
-        1, 0, 2,
-        3, 1, 2
+        // front
+		0, 1, 2,
+		2, 3, 0,
+		// right
+		1, 5, 6,
+		6, 2, 1,
+		// back
+		7, 6, 5,
+		5, 4, 7,
+		// left
+		4, 0, 3,
+		3, 7, 4,
+		// bottom
+		4, 5, 1,
+		1, 0, 4,
+		// top
+		3, 2, 6,
+		6, 7, 3
     };
 
     auto vertexArray = GL0bVertexArray(true);
@@ -117,13 +133,15 @@ int main()
 
     auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-45.0f), glm::vec3(1.0f, .0f, .0f));
     auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3(.0f, .0f, -3.0f));
-    auto projection = glm::perspective(glm::radians(20.0f), 600.0f/ 600.0f, .1f, 100.0f);
+    auto projection = glm::perspective(glm::radians(45.0f), 600.0f/ 600.0f, .1f, 100.0f);
 
     program.setUniformMat4("model", model);
     program.setUniformMat4("view", view);
     program.setUniformMat4("projection", projection);
 
     vertexArray.bind(); // Needs to be moved to render loop if multiple arrays are to be drawn
+
+    glEnable(GL_DEPTH_TEST);
 
     while (!glfwWindowShouldClose(window)) {
         glfwSwapBuffers(window);
@@ -144,8 +162,8 @@ int main()
         program.setUniformMat4("translation", translation);
 
         glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
 
     program.dispose();
