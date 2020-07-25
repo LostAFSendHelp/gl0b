@@ -31,29 +31,16 @@ static void pollKey(GLFWwindow* window,
     const std::function<void(float)>& horizontal,
     const std::function<void(float)>& vertical,
     const std::function<void(float)>& rotate) {
-    if (glfwGetKey(window, GLFW_KEY_Q)) {
-        glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
+    
+    auto hMultiplier = glfwGetKey(window, GLFW_KEY_RIGHT) - glfwGetKey(window, GLFW_KEY_LEFT);
+    horizontal(hMultiplier * .002f);
 
-    if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-        rotate(0.0012f);
-    }
+    auto vMultiplier = glfwGetKey(window, GLFW_KEY_UP) - glfwGetKey(window, GLFW_KEY_DOWN);
+    vertical(vMultiplier * .002f);
+    
+    rotate(glfwGetKey(window, GLFW_KEY_SPACE) * 0.005f);
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT)) {
-        horizontal(-0.001f);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_RIGHT)) {
-        horizontal(0.001f);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_UP)) {
-        vertical(0.001f);
-    }
-
-    if (glfwGetKey(window, GLFW_KEY_DOWN)) {
-        vertical(-0.001f);
-    }
+    glfwSetWindowShouldClose(window, glfwGetKey(window, GLFW_KEY_Q));
 }
 
 int main()
