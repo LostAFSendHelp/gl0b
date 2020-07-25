@@ -1,4 +1,5 @@
 #pragma once
+#include <glm/glm.hpp>
 #include "GL0bArrayBuffer.h"
 #include "GL0bIndexBuffer.h"
 
@@ -20,8 +21,11 @@ public:
 	// TODO: deprecate this method
 	void rotateArrayBuffer(const Vector3& center, const float& angle);
 	void shiftArrayBuffer(const float& h, const float& v);
+	void setWorldCoord(const float& x, const float& y, const float& z);
 
+	const glm::vec3& worldCoord();
 private:
+	glm::vec3 mWorldCoord { .0f, .0f, .0f };
 	GL0bArrayBuffer mArrayBuffer;
 	GL0bIndexBuffer mIndexBuffer;
 	unsigned int mID;

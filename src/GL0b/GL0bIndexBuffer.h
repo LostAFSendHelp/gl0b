@@ -11,6 +11,8 @@ public:
 	void push(const unsigned int& index);
 	void push(const std::vector<unsigned int>& indices);
 
+	unsigned int indexCount() const;
+
 private:
-	std::vector<int> data;
+	std::vector<int> mData;
 };

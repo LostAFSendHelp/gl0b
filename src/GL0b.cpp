@@ -30,7 +30,7 @@ static void gl0bViewPort(const GLint& width, const GLint& height) {
 static void pollKey(GLFWwindow* window,
     const std::function<void(float)>& horizontal,
     const std::function<void(float)>& vertical,
-    const std::function<void(float)>& rotate) {
+    const std::function<void(float, float)>& rotate) {
     
     auto hMultiplier = glfwGetKey(window, GLFW_KEY_RIGHT) - glfwGetKey(window, GLFW_KEY_LEFT);
     horizontal(hMultiplier * .002f);
@@ -38,7 +38,8 @@ static void pollKey(GLFWwindow* window,
     auto vMultiplier = glfwGetKey(window, GLFW_KEY_UP) - glfwGetKey(window, GLFW_KEY_DOWN);
     vertical(vMultiplier * .002f);
     
-    rotate(glfwGetKey(window, GLFW_KEY_SPACE) * 0.005f);
+    rotate(glfwGetKey(window, GLFW_KEY_X) * 0.005f,
+           glfwGetKey(window, GLFW_KEY_Z) * 0.005f);
 
     glfwSetWindowShouldClose(window, glfwGetKey(window, GLFW_KEY_Q));
 }
@@ -105,15 +106,18 @@ int main()
     vertexArrays.push_back( GL0bVertexArray { false });
     for (auto& vArray : vertexArrays) {
         vArray.bind();
+
         vArray.genBuffer<GL0bArrayBuffer>();
         vArray.genBuffer<GL0bIndexBuffer>();
+        
         vArray.push(vertices, true);
         vArray.push(indices, true);
+                
         vArray.unbind();
     }
 
-    vertexArrays[0].shiftArrayBuffer(-.5f, .0f);
-    vertexArrays[1].shiftArrayBuffer(.5f, .0f);
+    vertexArrays[0].setWorldCoord(-.5f, .0f, .0f);
+    vertexArrays[1].setWorldCoord(.5f, .0f, .0f);
 
     // -------------------------------------------
 
@@ -123,14 +127,16 @@ int main()
     program.link();
     program.use();
 
-    auto rotation = glm::mat4 { 1.0f };
+    auto rotationA = glm::mat4 { 1.0f };
+    auto rotationB = glm::mat4 { 1.0f };
     auto translation = glm::mat4 { 1.0f };
 
-    auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-45.0f), glm::vec3(1.0f, .0f, .0f));
+    auto modelA = glm::translate(glm::mat4{ 1.0f }, vertexArrays[0].worldCoord());
+    auto modelB = glm::translate(glm::mat4{ 1.0f }, vertexArrays[1].worldCoord());
+    
     auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3(.0f, .0f, -3.0f));
     auto projection = glm::perspective(glm::radians(45.0f), 1.0f, .1f, 100.0f);
 
-    program.setUniformMat4("model", model);
     program.setUniformMat4("view", view);
     program.setUniformMat4("projection", projection);
 
@@ -143,6 +149,9 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
 
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
         pollKey(window,
         [&](float h) {
             translation = glm::translate(translation, glm::vec3{ h, .0f, .0f });
@@ -150,19 +159,24 @@ int main()
         [&](float v) {
             translation = glm::translate(translation, glm::vec3{ .0f, v, .0f });
         },
-        [&](float a) {
-            rotation = glm::rotate(rotation, a, glm::vec3{ 0, 0, 1.0f });
+        [&](float a, float b) {
+            rotationA = glm::rotate(rotationA, a, glm::vec3{ 0, 0, 1.0f });
+            rotationB = glm::rotate(rotationB, b, glm::vec3{ 0, 0, 1.0f });
         });
 
-        program.setUniformMat4("rotation", rotation);
         program.setUniformMat4("translation", translation);
 
-        glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        program.setUniformMat4("model", glm::rotate(modelA, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f }));
+        program.setUniformMat4("rotation", rotationA);
+
         vertexArrays[0].bind();
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, vertexArrays[0].indexBuffer().indexCount(), GL_UNSIGNED_INT, nullptr);
+
+        program.setUniformMat4("model", glm::rotate(modelB, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f }));
+        program.setUniformMat4("rotation", rotationB);
+        
         vertexArrays[1].bind();
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, vertexArrays[1].indexBuffer().indexCount(), GL_UNSIGNED_INT, nullptr);
     }
 
     program.dispose();

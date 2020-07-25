@@ -57,11 +57,6 @@ void GL0bVertexArray::shiftArrayBuffer(const float& h, const float& v)
 	mArrayBuffer.update();
 }
 
-template<typename T>
-void GL0bVertexArray::genBuffer() {
-	static_assert(false);
-}
-
 template<>
 void GL0bVertexArray::genBuffer<GL0bArrayBuffer>() {
 	mArrayBuffer = GL0bArrayBuffer();
@@ -70,11 +65,6 @@ void GL0bVertexArray::genBuffer<GL0bArrayBuffer>() {
 template<>
 void GL0bVertexArray::genBuffer<GL0bIndexBuffer>() {
 	mIndexBuffer = GL0bIndexBuffer();
-}
-
-template<typename T>
-void GL0bVertexArray::push(const T&, bool update) {
-	static_assert(false);
 }
 
 template<>
@@ -107,4 +97,14 @@ void GL0bVertexArray::push<std::vector<unsigned int>>(const std::vector<unsigned
 	if (update) {
 		mIndexBuffer.update();
 	}
+}
+
+void GL0bVertexArray::setWorldCoord(const float& x, const float& y, const float& z) {
+    mWorldCoord.x = x;
+	mWorldCoord.y = y;
+	mWorldCoord.z = z;
+}
+
+const glm::vec3& GL0bVertexArray::worldCoord() {
+    return mWorldCoord;
 }
