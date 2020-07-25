@@ -68,15 +68,15 @@ int main()
 
     // TODO: delete dis
     const std::vector<Point> vertices = {
-        {-.5f, .5f, .0f, 0.0f, 0.0f, 1.0f },    // TLF
-        { .5f, .5f, .0f, 1.0f, 0.0f, 0.0f },     // TRF
-        { .5f, -.5f, .0f, 1.0f, 1.0f, 0.0f},    // BRF
-        {-.5f, -.5f, .0f, 0.0f, 1.0f, 0.0f},    // BLF
+        {-.25f, .25f, .25f, 0.0f, 0.0f, 1.0f },    // TLF
+        { .25f, .25f, .25f, 1.0f, 0.0f, 0.0f },     // TRF
+        { .25f, -.25f, .25f, 1.0f, 1.0f, 0.0f},    // BRF
+        {-.25f, -.25f, .25f, 0.0f, 1.0f, 0.0f},    // BLF
         
-        {-.5f, .5f, -1.0f, 0.0f, 0.0f, 1.0f },    // TLB
-        { .5f, .5f, -1.0f, 1.0f, 0.0f, 0.0f },     // TRB
-        { .5f, -.5f, -1.0f, 1.0f, 1.0f, 0.0f},    // BRB
-        {-.5f, -.5f, -1.0f, 0.0f, 1.0f, 0.0f}    // BLB
+        {-.25f, .25f, -.25f, 0.0f, 0.0f, 1.0f },    // TLB
+        { .25f, .25f, -.25f, 1.0f, 0.0f, 0.0f },     // TRB
+        { .25f, -.25f, -.25f, 1.0f, 1.0f, 0.0f},    // BRB
+        {-.25f, -.25f, -.25f, 0.0f, 1.0f, 0.0f}    // BLB
     };
 
     const std::vector<unsigned int> indices = {
@@ -100,12 +100,20 @@ int main()
 		6, 7, 3
     };
 
-    auto vertexArray = GL0bVertexArray(true);
-    vertexArray.genBuffer<GL0bArrayBuffer>();
-    vertexArray.genBuffer<GL0bIndexBuffer>();
-    vertexArray.push(vertices, true);
-    vertexArray.push(indices, true);
-    vertexArray.unbind();
+    auto vertexArrays = std::vector<GL0bVertexArray>{ };
+    vertexArrays.push_back( GL0bVertexArray { false });
+    vertexArrays.push_back( GL0bVertexArray { false });
+    for (auto& vArray : vertexArrays) {
+        vArray.bind();
+        vArray.genBuffer<GL0bArrayBuffer>();
+        vArray.genBuffer<GL0bIndexBuffer>();
+        vArray.push(vertices, true);
+        vArray.push(indices, true);
+        vArray.unbind();
+    }
+
+    vertexArrays[0].shiftArrayBuffer(-.5f, .0f);
+    vertexArrays[1].shiftArrayBuffer(.5f, .0f);
 
     // -------------------------------------------
 
@@ -120,13 +128,14 @@ int main()
 
     auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-45.0f), glm::vec3(1.0f, .0f, .0f));
     auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3(.0f, .0f, -3.0f));
-    auto projection = glm::perspective(glm::radians(45.0f), 600.0f/ 600.0f, .1f, 100.0f);
+    auto projection = glm::perspective(glm::radians(45.0f), 1.0f, .1f, 100.0f);
 
     program.setUniformMat4("model", model);
     program.setUniformMat4("view", view);
     program.setUniformMat4("projection", projection);
 
-    vertexArray.bind(); // Needs to be moved to render loop if multiple arrays are to be drawn
+    vertexArrays[0].unbind();
+    vertexArrays[1].unbind();
 
     glEnable(GL_DEPTH_TEST);
 
@@ -150,6 +159,9 @@ int main()
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        vertexArrays[0].bind();
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+        vertexArrays[1].bind();
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
     }
 

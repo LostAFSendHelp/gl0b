@@ -65,13 +65,11 @@ void GL0bVertexArray::genBuffer() {
 template<>
 void GL0bVertexArray::genBuffer<GL0bArrayBuffer>() {
 	mArrayBuffer = GL0bArrayBuffer();
-	mArrayBuffer.bind();
 }
 
 template<>
 void GL0bVertexArray::genBuffer<GL0bIndexBuffer>() {
 	mIndexBuffer = GL0bIndexBuffer();
-	mIndexBuffer.bind();
 }
 
 template<typename T>

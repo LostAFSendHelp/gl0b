@@ -4,7 +4,7 @@
 
 class GL0bVertexArray {
 public:
-	GL0bVertexArray(bool bind);
+	GL0bVertexArray(bool bind = false);
 	~GL0bVertexArray();
 
 	void bind();
