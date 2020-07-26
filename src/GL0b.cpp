@@ -11,6 +11,7 @@
 #include "Progam/GL0bProgram.h"
 #include "Structures/Point.h"
 #include "GL0b/GL0bVertexArray.h"
+#include "Renderer/GL0bRenderer.h"
 
 #define GL0BTERMINATE(x) std::cout << x << std::endl; _getch(); return 0
 #define GL0B_WIDTH 800
@@ -38,8 +39,8 @@ static void pollKey(GLFWwindow* window,
     auto vMultiplier = glfwGetKey(window, GLFW_KEY_UP) - glfwGetKey(window, GLFW_KEY_DOWN);
     vertical(vMultiplier * .002f);
     
-    rotate(glfwGetKey(window, GLFW_KEY_X) * 0.005f,
-           glfwGetKey(window, GLFW_KEY_Z) * 0.005f);
+    rotate(glfwGetKey(window, GLFW_KEY_Z) * 0.005f,
+           glfwGetKey(window, GLFW_KEY_X) * 0.005f);
 
     glfwSetWindowShouldClose(window, glfwGetKey(window, GLFW_KEY_Q));
 }
@@ -116,8 +117,8 @@ int main()
         vArray.unbind();
     }
 
-    vertexArrays[0].setWorldCoord(-.5f, .0f, .0f);
-    vertexArrays[1].setWorldCoord(.5f, .0f, .0f);
+    vertexArrays[0].translate({ -.5f, .0f, .0f });
+    vertexArrays[1].translate({ .5f, .0f, .0f });
 
     // -------------------------------------------
 
@@ -127,14 +128,8 @@ int main()
     program.link();
     program.use();
 
-    auto rotationA = glm::mat4 { 1.0f };
-    auto rotationB = glm::mat4 { 1.0f };
-    auto translation = glm::mat4 { 1.0f };
-
-    auto modelA = glm::translate(glm::mat4{ 1.0f }, vertexArrays[0].worldCoord());
-    auto modelB = glm::translate(glm::mat4{ 1.0f }, vertexArrays[1].worldCoord());
-    
-    auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3(.0f, .0f, -3.0f));
+    auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f });
+    auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3{ .0f, .0f, -3.0f });
     auto projection = glm::perspective(glm::radians(45.0f), 1.0f, .1f, 100.0f);
 
     program.setUniformMat4("view", view);
@@ -149,34 +144,25 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        glClearColor(0, 0, 0, 0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+        GL0bRenderer::shared.clear();
+
         pollKey(window,
         [&](float h) {
-            translation = glm::translate(translation, glm::vec3{ h, .0f, .0f });
+            model = glm::translate(model, glm::vec3{ h, .0f, .0f });
         },
         [&](float v) {
-            translation = glm::translate(translation, glm::vec3{ .0f, v, .0f });
+            model = glm::translate(model, glm::vec3{ .0f, v, .0f });
         },
         [&](float a, float b) {
-            rotationA = glm::rotate(rotationA, a, glm::vec3{ 0, 0, 1.0f });
-            rotationB = glm::rotate(rotationB, b, glm::vec3{ 0, 0, 1.0f });
+            vertexArrays[0].rotate(a);
+            vertexArrays[1].rotate(b);
         });
 
-        program.setUniformMat4("translation", translation);
+        program.setUniformMat4("model", model);
 
-        program.setUniformMat4("model", glm::rotate(modelA, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f }));
-        program.setUniformMat4("rotation", rotationA);
-
-        vertexArrays[0].bind();
-        glDrawElements(GL_TRIANGLES, vertexArrays[0].indexBuffer().indexCount(), GL_UNSIGNED_INT, nullptr);
-
-        program.setUniformMat4("model", glm::rotate(modelB, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f }));
-        program.setUniformMat4("rotation", rotationB);
-        
-        vertexArrays[1].bind();
-        glDrawElements(GL_TRIANGLES, vertexArrays[1].indexBuffer().indexCount(), GL_UNSIGNED_INT, nullptr);
+        for (const auto& va : vertexArrays) {
+            GL0bRenderer::shared.drawElements(va, program);
+        }
     }
 
     program.dispose();

@@ -6,18 +6,21 @@ GL0bVertexArray::GL0bVertexArray(bool bind)
     if (bind) {
         this->bind();
     }
+
+	mTranslation = glm::translate(glm::mat4{ 1.0f }, glm::vec3{ .0f, .0f, .0f });
+	mRotation = glm::rotate(glm::mat4{ 1.0f }, .0f, glm::vec3{ .0f, .0f, 1.0f });
 }
 
 GL0bVertexArray::~GL0bVertexArray()
 {
 }
 
-void GL0bVertexArray::bind()
+void GL0bVertexArray::bind() const
 {
     glBindVertexArray(mID);
 }
 
-void GL0bVertexArray::unbind()
+void GL0bVertexArray::unbind() const
 {
     glBindVertexArray(0);
 }
@@ -33,28 +36,14 @@ const unsigned int& GL0bVertexArray::id()
     return mID;
 }
 
-const GL0bArrayBuffer& GL0bVertexArray::arrayBuffer()
+const GL0bArrayBuffer& GL0bVertexArray::arrayBuffer() const
 {
     return mArrayBuffer;
 }
 
-const GL0bIndexBuffer& GL0bVertexArray::indexBuffer()
+const GL0bIndexBuffer& GL0bVertexArray::indexBuffer() const
 {
     return mIndexBuffer;
-}
-
-void GL0bVertexArray::rotateArrayBuffer(const Vector3& center, const float& angle)
-{
-	bind();
-	mArrayBuffer.rotate(center, angle);
-	mArrayBuffer.update();
-}
-
-void GL0bVertexArray::shiftArrayBuffer(const float& h, const float& v)
-{
-	bind();
-	mArrayBuffer.shift(h, v);
-	mArrayBuffer.update();
 }
 
 template<>
@@ -99,12 +88,18 @@ void GL0bVertexArray::push<std::vector<unsigned int>>(const std::vector<unsigned
 	}
 }
 
-void GL0bVertexArray::setWorldCoord(const float& x, const float& y, const float& z) {
-    mWorldCoord.x = x;
-	mWorldCoord.y = y;
-	mWorldCoord.z = z;
+void GL0bVertexArray::translate(const glm::vec3& translation) {
+	mTranslation = glm::translate(mTranslation, translation);
 }
 
-const glm::vec3& GL0bVertexArray::worldCoord() {
-    return mWorldCoord;
+void GL0bVertexArray::rotate(const float& angle, const glm::vec3& axis) {
+	mRotation = glm::rotate(mRotation, angle, axis);
+}
+
+const glm::mat4& GL0bVertexArray::translation() const {
+	return mTranslation;
+}
+
+const glm::mat4& GL0bVertexArray::rotation() const {
+	return mRotation;
 }

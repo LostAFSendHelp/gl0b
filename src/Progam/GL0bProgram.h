@@ -16,8 +16,8 @@ public:
 	~GL0bProgram();
 
 	void addShader(GLenum type, const std::string& path);
-	void link();
-	void use();
+	void link() const;
+	void use() const;
 	void dispose();
 	void setUniformMat4(const char* name, const glm::mat4& matrix); // TODO: make this a template
 	const unsigned int& id();

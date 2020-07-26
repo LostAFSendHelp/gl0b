@@ -19,7 +19,7 @@ void GL0bProgram::addShader(GLenum type, const std::string& path)
 	mShaders.push_back(shader);
 }
 
-void GL0bProgram::link()
+void GL0bProgram::link() const
 {
 	glLinkProgram(mID);
 	auto status = gl0bGetStatus(GL_LINK_STATUS, mID);
@@ -37,7 +37,7 @@ void GL0bProgram::link()
 	}
 }
 
-void GL0bProgram::use()
+void GL0bProgram::use() const
 {
 	glUseProgram(mID);
 }

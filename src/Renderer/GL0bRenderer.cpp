@@ -34,3 +34,18 @@ const char* gl0bGetStatus(GLenum statusType, GLint unit) {
 		return target;
 	}
 }
+
+GL0bRenderer& GL0bRenderer::shared = GL0bRenderer();
+
+void GL0bRenderer::drawElements(const GL0bVertexArray& va, GL0bProgram& pr) {
+	va.bind();
+	pr.setUniformMat4("translation", va.translation());
+	pr.setUniformMat4("rotation", va.rotation());
+	glDrawElements(GL_TRIANGLES, va.indexBuffer().indexCount(), GL_UNSIGNED_INT, nullptr);
+	va.unbind();
+}
+
+void GL0bRenderer::clear() {
+	glClearColor(0, 0, 0, 0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
