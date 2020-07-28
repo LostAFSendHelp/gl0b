@@ -7,8 +7,12 @@ const char* gl0bGetStatus(GLenum statusType, GLint unit);
 
 class GL0bRenderer {
 public:
-    void drawElements(const GL0bVertexArray& va, GL0bProgram& pr);
+    explicit GL0bRenderer(const GL0bProgram& program);
+    ~GL0bRenderer();
+
+    void drawElements(const GL0bVertexArray& va);
     void clear();
 
-    static GL0bRenderer& shared;
+private:
+    GL0bProgram mProgram;
 };

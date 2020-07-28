@@ -12,6 +12,7 @@
 #include "Structures/Point.h"
 #include "GL0b/GL0bVertexArray.h"
 #include "Renderer/GL0bRenderer.h"
+#include "samples/sample_instances.h"
 
 #define GL0BTERMINATE(x) std::cout << x << std::endl; _getch(); return 0
 #define GL0B_WIDTH 800
@@ -28,6 +29,7 @@ static void gl0bViewPort(const GLint& width, const GLint& height) {
     }
 }
 
+// TODO: create a temporary central control
 static void pollKey(GLFWwindow* window,
     const std::function<void(float)>& horizontal,
     const std::function<void(float)>& vertical,
@@ -49,73 +51,24 @@ int main()
 {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-
     auto window = glfwCreateWindow(GL0B_WIDTH, GL0B_HEIGHT, "One step back", NULL, NULL);
-
     if (!window) {
         GL0BTERMINATE("Error creating window");
     }
-
     glfwMakeContextCurrent(window);
-
     glewInit();
-
     gl0bViewPort(GL0B_WIDTH, GL0B_HEIGHT);
-
     glfwSetFramebufferSizeCallback(window, [] (GLFWwindow* w, int width, int height) {
         static unsigned int count = 1;
         std::cout << "resizing frame buffer " << count++ << std::endl;
         gl0bViewPort(width, height);
     });
 
-    // TODO: delete dis
-    const std::vector<Point> vertices = {
-        {-.25f, .25f, .25f, 0.0f, 0.0f, 1.0f },    // TLF
-        { .25f, .25f, .25f, 1.0f, 0.0f, 0.0f },     // TRF
-        { .25f, -.25f, .25f, 1.0f, 1.0f, 0.0f},    // BRF
-        {-.25f, -.25f, .25f, 0.0f, 1.0f, 0.0f},    // BLF
-        
-        {-.25f, .25f, -.25f, 0.0f, 0.0f, 1.0f },    // TLB
-        { .25f, .25f, -.25f, 1.0f, 0.0f, 0.0f },     // TRB
-        { .25f, -.25f, -.25f, 1.0f, 1.0f, 0.0f},    // BRB
-        {-.25f, -.25f, -.25f, 0.0f, 1.0f, 0.0f}    // BLB
-    };
+    const std::vector<Point> vertices = gl0b::generate_vertex_samples();
+    const std::vector<unsigned int> indices = gl0b::generate_index_samples();
 
-    const std::vector<unsigned int> indices = {
-        // front
-		0, 1, 2,
-		2, 3, 0,
-		// right
-		1, 5, 6,
-		6, 2, 1,
-		// back
-		7, 6, 5,
-		5, 4, 7,
-		// left
-		4, 0, 3,
-		3, 7, 4,
-		// bottom
-		4, 5, 1,
-		1, 0, 4,
-		// top
-		3, 2, 6,
-		6, 7, 3
-    };
-
-    auto vertexArrays = std::vector<GL0bVertexArray>{ };
-    vertexArrays.push_back( GL0bVertexArray { false });
-    vertexArrays.push_back( GL0bVertexArray { false });
-    for (auto& vArray : vertexArrays) {
-        vArray.bind();
-
-        vArray.genBuffer<GL0bArrayBuffer>();
-        vArray.genBuffer<GL0bIndexBuffer>();
-        
-        vArray.push(vertices, true);
-        vArray.push(indices, true);
-                
-        vArray.unbind();
-    }
+    const auto sampleVA = gl0b::generate_va_sample(vertices, indices);
+    auto vertexArrays = std::vector<GL0bVertexArray>{ sampleVA, sampleVA };
 
     vertexArrays[0].translate({ -.5f, .0f, .0f });
     vertexArrays[1].translate({ .5f, .0f, .0f });
@@ -127,6 +80,8 @@ int main()
     program.addShader(GL_FRAGMENT_SHADER, "src/resources/shaders/fragment_shader.glsl");
     program.link();
     program.use();
+
+    auto renderer = GL0bRenderer(program);
 
     auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f });
     auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3{ .0f, .0f, -3.0f });
@@ -144,7 +99,7 @@ int main()
         glfwSwapBuffers(window);
         glfwPollEvents();
 
-        GL0bRenderer::shared.clear();
+        renderer.clear();
 
         pollKey(window,
         [&](float h) {
@@ -161,7 +116,7 @@ int main()
         program.setUniformMat4("model", model);
 
         for (const auto& va : vertexArrays) {
-            GL0bRenderer::shared.drawElements(va, program);
+            renderer.drawElements(va);
         }
     }
 

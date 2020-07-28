@@ -35,12 +35,13 @@ const char* gl0bGetStatus(GLenum statusType, GLint unit) {
 	}
 }
 
-GL0bRenderer& GL0bRenderer::shared = GL0bRenderer();
+GL0bRenderer::GL0bRenderer(const GL0bProgram& program) : mProgram(program) { }
+GL0bRenderer::~GL0bRenderer() { }
 
-void GL0bRenderer::drawElements(const GL0bVertexArray& va, GL0bProgram& pr) {
+void GL0bRenderer::drawElements(const GL0bVertexArray& va) {
 	va.bind();
-	pr.setUniformMat4("translation", va.translation());
-	pr.setUniformMat4("rotation", va.rotation());
+	mProgram.setUniformMat4("translation", va.translation());
+	mProgram.setUniformMat4("rotation", va.rotation());
 	glDrawElements(GL_TRIANGLES, va.indexBuffer().indexCount(), GL_UNSIGNED_INT, nullptr);
 	va.unbind();
 }
