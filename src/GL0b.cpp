@@ -13,6 +13,7 @@
 #include "GL0b/GL0bVertexArray.h"
 #include "Renderer/GL0bRenderer.h"
 #include "Control/GL0bCentralControl.h"
+#include "Camera/Gl0bCamera.h"
 #include "samples/sample_instances.h"
 
 #define GL0BTERMINATE(x) std::cout << x << std::endl; _getch(); return 0
@@ -68,14 +69,15 @@ int main()
     auto renderer = GL0bRenderer(program);
 
     auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f });
-    auto view = glm::translate(glm::mat4{ 1.0f }, glm::vec3{ .0f, .0f, -3.0f });
     auto projection = glm::perspective(glm::radians(45.0f), 1.0f, .1f, 100.0f);
 
-    program.setUniformMat4("view", view);
     program.setUniformMat4("projection", projection);
 
     vertexArrays[0].unbind();
     vertexArrays[1].unbind();
+
+    // Init camera
+    auto camera = GL0bCamera({ .0f, .0f, 3.0f });
 
     // Init control
     auto control = GL0bCentralControl();    
@@ -91,6 +93,12 @@ int main()
         } })
         .push({ GLFW_KEY_UP, GLFW_KEY_DOWN, .005f, [&](float m){
             model = glm::translate(model, glm::vec3{ .0f, m, .0f });
+        } })
+        .push({ GLFW_KEY_D, GLFW_KEY_A, .005f, [&](float m){
+            camera.hShift(m);
+        } })
+        .push({ GLFW_KEY_W, GLFW_KEY_S, .005f, [&](float m){
+            camera.fShift(m);
         } })
         .push({ GLFW_KEY_Q, GLFW_KEY_Q, 1.0f, [&](float m){
             glfwSetWindowShouldClose(window, (int)m);
@@ -108,6 +116,7 @@ int main()
         control.poll(window);
 
         program.setUniformMat4("model", model);
+        program.setUniformMat4("view", camera.view());
 
         for (const auto& va : vertexArrays) {
             renderer.drawElements(va);
