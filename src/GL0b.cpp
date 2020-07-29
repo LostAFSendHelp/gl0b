@@ -12,6 +12,7 @@
 #include "Structures/Point.h"
 #include "GL0b/GL0bVertexArray.h"
 #include "Renderer/GL0bRenderer.h"
+#include "Control/GL0bCentralControl.h"
 #include "samples/sample_instances.h"
 
 #define GL0BTERMINATE(x) std::cout << x << std::endl; _getch(); return 0
@@ -29,26 +30,9 @@ static void gl0bViewPort(const GLint& width, const GLint& height) {
     }
 }
 
-// TODO: create a temporary central control
-static void pollKey(GLFWwindow* window,
-    const std::function<void(float)>& horizontal,
-    const std::function<void(float)>& vertical,
-    const std::function<void(float, float)>& rotate) {
-    
-    auto hMultiplier = glfwGetKey(window, GLFW_KEY_RIGHT) - glfwGetKey(window, GLFW_KEY_LEFT);
-    horizontal(hMultiplier * .002f);
-
-    auto vMultiplier = glfwGetKey(window, GLFW_KEY_UP) - glfwGetKey(window, GLFW_KEY_DOWN);
-    vertical(vMultiplier * .002f);
-    
-    rotate(glfwGetKey(window, GLFW_KEY_Z) * 0.005f,
-           glfwGetKey(window, GLFW_KEY_X) * 0.005f);
-
-    glfwSetWindowShouldClose(window, glfwGetKey(window, GLFW_KEY_Q));
-}
-
 int main()
 {
+    // Init context
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     auto window = glfwCreateWindow(GL0B_WIDTH, GL0B_HEIGHT, "One step back", NULL, NULL);
@@ -64,6 +48,7 @@ int main()
         gl0bViewPort(width, height);
     });
 
+    // Init vertices, indices & vertex arrays
     const std::vector<Point> vertices = gl0b::generate_vertex_samples();
     const std::vector<unsigned int> indices = gl0b::generate_index_samples();
 
@@ -73,8 +58,7 @@ int main()
     vertexArrays[0].translate({ -.5f, .0f, .0f });
     vertexArrays[1].translate({ .5f, .0f, .0f });
 
-    // -------------------------------------------
-
+    // Init program
     auto program = GL0bProgram();
     program.addShader(GL_VERTEX_SHADER, "src/resources/shaders/vertex_shader.glsl");
     program.addShader(GL_FRAGMENT_SHADER, "src/resources/shaders/fragment_shader.glsl");
@@ -93,25 +77,35 @@ int main()
     vertexArrays[0].unbind();
     vertexArrays[1].unbind();
 
+    // Init control
+    auto control = GL0bCentralControl();    
+    control
+        .push({ GLFW_KEY_Z, GLFW_KEY_X, .005f, [&](float m){
+            vertexArrays[0].rotate(m, { .0f, .0f, 1.0f });
+        } })
+        .push({ GLFW_KEY_C, GLFW_KEY_V, .005f, [&](float m){
+            vertexArrays[1].rotate(m, { .0f, .0f, 1.0f });
+        } })
+        .push({ GLFW_KEY_RIGHT, GLFW_KEY_LEFT, .005f, [&](float m){
+            model = glm::translate(model, glm::vec3{ m, .0f, .0f });
+        } })
+        .push({ GLFW_KEY_UP, GLFW_KEY_DOWN, .005f, [&](float m){
+            model = glm::translate(model, glm::vec3{ .0f, m, .0f });
+        } })
+        .push({ GLFW_KEY_Q, GLFW_KEY_Q, 1.0f, [&](float m){
+            glfwSetWindowShouldClose(window, (int)m);
+        } });
+    
     glEnable(GL_DEPTH_TEST);
-
+    
     while (!glfwWindowShouldClose(window)) {
         glfwSwapBuffers(window);
         glfwPollEvents();
 
         renderer.clear();
 
-        pollKey(window,
-        [&](float h) {
-            model = glm::translate(model, glm::vec3{ h, .0f, .0f });
-        },
-        [&](float v) {
-            model = glm::translate(model, glm::vec3{ .0f, v, .0f });
-        },
-        [&](float a, float b) {
-            vertexArrays[0].rotate(a);
-            vertexArrays[1].rotate(b);
-        });
+        // TODO: perform control here
+        control.poll(window);
 
         program.setUniformMat4("model", model);
 

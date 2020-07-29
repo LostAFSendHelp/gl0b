@@ -7,7 +7,7 @@
 class GL0bCentralControl {
 public:
     void poll(GLFWwindow*) const;
-    void push(const GL0bControlFunc&);
+    GL0bCentralControl& push(const GL0bControlFunc&);
 private:
     std::vector<GL0bControlFunc> mFuncs;
 };

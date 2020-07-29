@@ -6,12 +6,13 @@
 
 class GL0bControlFunc {
 public:
-    GL0bControlFunc(const std::vector<int>&, const std::vector<int>&, const std::function<void()>&);
+    GL0bControlFunc(const int&, const int&, const float&, const std::function<void(float)>&);
     ~GL0bControlFunc();
 
     void poll(GLFWwindow*) const;
 private:
-    std::function<void()> mFunc;
-    std::vector<int> mPositive;
-    std::vector<int> mNegative;
+    std::function<void(float)> mFunc;
+    int mPositive;
+    int mNegative;
+    float mMagnitude;
 };
