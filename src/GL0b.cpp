@@ -43,11 +43,12 @@ int main()
     glfwMakeContextCurrent(window);
     glewInit();
     gl0bViewPort(GL0B_WIDTH, GL0B_HEIGHT);
-    glfwSetFramebufferSizeCallback(window, [] (GLFWwindow* w, int width, int height) {
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* w, int width, int height) {
         static unsigned int count = 1;
         std::cout << "resizing frame buffer " << count++ << std::endl;
         gl0bViewPort(width, height);
     });
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     // Init vertices, indices & vertex arrays
     const std::vector<Point> vertices = gl0b::generate_vertex_samples();
@@ -68,7 +69,7 @@ int main()
 
     auto renderer = GL0bRenderer(program);
 
-    auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(-60.0f), glm::vec3{ 1.0f, .0f, .0f });
+    auto model = glm::rotate(glm::mat4{ 1.0f }, glm::radians(.0f), glm::vec3{ 1.0f, .0f, .0f });
     auto projection = glm::perspective(glm::radians(45.0f), 1.0f, .1f, 100.0f);
 
     program.setUniformMat4("projection", projection);
@@ -77,28 +78,36 @@ int main()
     vertexArrays[1].unbind();
 
     // Init camera
-    auto camera = GL0bCamera({ .0f, .0f, 3.0f });
+    auto camera = GL0bCamera({ .0f, .0f, 3.0f }, { .0f, .0f, .0f });
+    camera.setInput({ GLFW_KEY_D, GLFW_KEY_A }, { GLFW_KEY_W, GLFW_KEY_S });
+    camera.ground(true);
+
+    glfwSetWindowUserPointer(window, &camera);
+    glfwSetCursorPosCallback(window, [](GLFWwindow* w, double x, double y) {
+        static bool first = true;
+        auto& cam = *static_cast<GL0bCamera*>(glfwGetWindowUserPointer(w));
+        if (first) {
+            cam.mMouse.reset({ x, y });
+            first = false;
+        } else {
+            cam.update(x, y);
+        }
+    });
 
     // Init control
     auto control = GL0bCentralControl();    
     control
         .push({ GLFW_KEY_Z, GLFW_KEY_X, .005f, [&](float m){
-            vertexArrays[0].rotate(m, { .0f, .0f, 1.0f });
+            vertexArrays[0].rotate(m, { .0f, 1.0f, 0.0f });
         } })
         .push({ GLFW_KEY_C, GLFW_KEY_V, .005f, [&](float m){
-            vertexArrays[1].rotate(m, { .0f, .0f, 1.0f });
+            vertexArrays[1].rotate(m, { .0f, 1.0f, 0.0f });
         } })
         .push({ GLFW_KEY_RIGHT, GLFW_KEY_LEFT, .005f, [&](float m){
             model = glm::translate(model, glm::vec3{ m, .0f, .0f });
         } })
         .push({ GLFW_KEY_UP, GLFW_KEY_DOWN, .005f, [&](float m){
             model = glm::translate(model, glm::vec3{ .0f, m, .0f });
-        } })
-        .push({ GLFW_KEY_D, GLFW_KEY_A, .005f, [&](float m){
-            camera.hShift(m);
-        } })
-        .push({ GLFW_KEY_W, GLFW_KEY_S, .005f, [&](float m){
-            camera.fShift(m);
         } })
         .push({ GLFW_KEY_Q, GLFW_KEY_Q, 1.0f, [&](float m){
             glfwSetWindowShouldClose(window, (int)m);
@@ -114,6 +123,7 @@ int main()
 
         // TODO: perform control here
         control.poll(window);
+        camera.poll(window);
 
         program.setUniformMat4("model", model);
         program.setUniformMat4("view", camera.view());
